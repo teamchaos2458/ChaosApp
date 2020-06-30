@@ -68,7 +68,8 @@ function LoginPage() {
 
       {FirebaseMethods.user ? (
         <>
-          <meta name="google-signin-client_id" content="YOUR_CLIENT_ID" />
+          <script src="https://apis.google.com/js/platform.js" async defer></script>
+          <meta name="google-signin-client_id" content="76269935740-4uvtsq2vqtblpom4kfmh2giikmamkn44.apps.googleusercontent.com" />
           <meta
             name="google-signin-cookiepolicy"
             content="single_host_origin"
@@ -79,7 +80,7 @@ function LoginPage() {
         </>
       ) : (
         <>
-          <Button variant="primary" onClick={FirebaseMethods.signInWithGoogle}>
+          <Button variant="primary" >
             Sign in with Google
           </Button>
           <h1>NERD</h1>
@@ -89,4 +90,65 @@ function LoginPage() {
   );
 }
 
+//Put this in button for signout onClick={signOut()}
+
+//Runs when the Google SignIn button is clicked
+function onSignIn(googleUser) {
+  console.log('google auth response',googleUser);
+  var profile = googleUser.getBasicProfile();
+  console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+  console.log('Name: ' + profile.getName());
+  console.log('Image URL: ' + profile.getImageUrl());
+  console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+
+  // We need to register an Observer on Firebase Auth to make sure auth is initialized.
+  var unsubscribe = firebase.auth().onAuthStateChanged(function(firebaseUser) {
+    unsubscribe();
+    // Check if we are already signed-in Firebase with the correct user.
+    if (!isUserEqual(googleUser, firebaseUser)) {
+      // Build Firebase credential with the Google ID token.
+      var credential = firebase.auth.GoogleAuthProvider.credential(
+          googleUser.getAuthResponse().id_token);
+      // Sign in with credential from the Google user.
+      firebase.auth().signInWithCredential(credential).catch(function(error) {
+        // Handle Errors here.
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        // The email of the user's account used.
+        var email = error.email;
+        // The firebase.auth.AuthCredential type that was used.
+        var credential = error.credential;
+        // ...
+      });
+    } else {
+      console.log('User already signed-in Firebase.');
+    }
+  });
+}
+
+//Runs to check if the user is already logged in (preventing the need to relogin the user)
+//Called by OnSignIn
+function isUserEqual(googleUser, firebaseUser) {
+  if (firebaseUser) {
+    var providerData = firebaseUser.providerData;
+    for (var i = 0; i < providerData.length; i++) {
+      if (providerData[i].providerId === firebase.auth.GoogleAuthProvider.PROVIDER_ID &&
+          providerData[i].uid === googleUser.getBasicProfile().getId()) {
+        // We don't need to reauth the Firebase connection.
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+//Signs the user out
+/*
+function signOut() {
+  var auth2 = gapi.auth2.getAuthInstance();
+  auth2.signOut().then(function () {
+    console.log('User signed out.');
+  });
+}
+*/
 export default LoginPage;
