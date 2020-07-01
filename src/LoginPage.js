@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react"; //Import React and define hooks
 
-import "./FirebaseMethods"; //Import the methods we made to simplify and reuse firebase functions
-
 import "./LoginPage.css"; //Import the styling for the jsx in this file
 
 import "bootstrap/dist/css/bootstrap.min.css"; //Imporst bootstrap styling
 import Button from "react-bootstrap/button"; //Imports bootstrap Button preset
 import Form from "react-bootstrap/form"; //Imports boFtstrap orm Preset
-
 import FirebaseMethods from "./FirebaseMethods"; //Imports our custom firebase methods
 var firebase = require("firebase");
 var firebaseui = require("firebaseui");
@@ -68,6 +65,11 @@ function LoginPage() {
 
       {FirebaseMethods.user ? (
         <>
+          <script
+            src="https://apis.google.com/js/platform.js"
+            async
+            defer
+          ></script>
           <meta name="google-signin-client_id" content="YOUR_CLIENT_ID" />
           <meta
             name="google-signin-cookiepolicy"
