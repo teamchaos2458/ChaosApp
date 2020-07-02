@@ -1,4 +1,4 @@
-import React from "react"; // Import React and define hooks
+import React from "react"; // Import React
 
 // Styling
 import Button from "react-bootstrap/button"; // Imports bootstrap Button preset
@@ -13,8 +13,8 @@ import firebase from "firebase/app";
 import firebaseConfig from "../firebaseConfig.json"; // Import Firebase config
 import "firebase/auth";
 
-import logo from "./images/logo.png";
-// Firebase Init app with config from previously imported config firebese file.org
+import logo from "../images/logo.png";
+
 const firebaseApp = firebase.initializeApp(firebaseConfig);
 
 class LoginPage extends React.Component<WrappedComponentProps> {
@@ -31,12 +31,82 @@ class LoginPage extends React.Component<WrappedComponentProps> {
         this.setState({ password: event.target.value });
     };
 
+    emailSignIn = (email: string, password: string) => {
+        firebase
+            .auth()
+            .signInWithEmailAndPassword(email, password)
+            .catch(function (error) {
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                // ...
+            });
+    };
+
+    emailSignOut = () => {
+        firebase
+            .auth()
+            .signOut()
+            .then(function () {
+                console.log("Signed Out");
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    };
+
+    componentDidMount = () => {
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (user) {
+                // User is signed in.
+                var displayName = user.displayName;
+                var email = user.email;
+                var emailVerified = user.emailVerified;
+                var photoURL = user.photoURL;
+                var isAnonymous = user.isAnonymous;
+                var uid = user.uid;
+                var providerData = user.providerData;
+                console.log("Signed In!");
+                console.log(user.email);
+                // ...
+            } else {
+                // User is signed out.
+                console.log("Signed Out.");
+            }
+        });
+    };
+
     render() {
         const { user, signOut, signInWithGoogle } = this.props; // witchcraft
-        console.log(user);
+        //console.log(user);
+        let userDisplay;
+        if (user) {
+            userDisplay = (
+                <>
+                    <Button variant="danger" onClick={signOut}>
+                        Sign out
+                    </Button>
+                    <p style={{ marginTop: "1rem" }}>
+                        Signed in with {user.email}
+                    </p>
+                </>
+            );
+        } else {
+            userDisplay = (
+                <>
+                    <Button variant="primary" onClick={signInWithGoogle}>
+                        Sign in with Google
+                    </Button>
+                </>
+            );
+        }
         return (
             <div className="Page">
-                <img src={logo} alt="We sympathise with your broken eyes" />
+                <img
+                    style={{ width: "20rem" }}
+                    src={logo}
+                    alt="Team Chaos 2458 Logo"
+                />
                 <Form>
                     <Form.Group controlId="formBasicEmail" /*xs={7}*/>
                         <Form.Label>Email address</Form.Label>
@@ -61,30 +131,22 @@ class LoginPage extends React.Component<WrappedComponentProps> {
                         />
                     </Form.Group>
                     <Form.Group controlId="formBasicCheckbox">
-                        <Button variant="primary" type="submit">
+                        <Button
+                            variant="primary"
+                            style={{ marginRight: "1rem" }}
+                            onClick={() =>
+                                this.emailSignIn(
+                                    this.state.email,
+                                    this.state.password
+                                )
+                            }
+                        >
                             Log In
                         </Button>
-                        <Button variant="secondary" type="submit">
-                            Sign Up
-                        </Button>
+                        <Button variant="secondary">Sign Up</Button>
                     </Form.Group>
                 </Form>
-
-                {user ? (
-                    <>
-                        <h1>Hello, {user.displayName}</h1>
-                        <Button variant="danger" onClick={signOut}>
-                            Sign out
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                        <h2>Or</h2>
-                        <Button variant="primary" onClick={signInWithGoogle}>
-                            Sign in with Google
-                        </Button>
-                    </>
-                )}
+                <div>{userDisplay}</div>
             </div>
         );
     }

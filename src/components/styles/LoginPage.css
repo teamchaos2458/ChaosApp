@@ -3,3 +3,7 @@
     margin: auto;
     padding: 70px;
 }
+
+.Button {
+    padding-inline: 0.5rem;
+}
