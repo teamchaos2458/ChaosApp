@@ -4,7 +4,7 @@ import React from "react"; // Import React
 import Button from "react-bootstrap/button"; // Imports bootstrap Button preset
 import Form from "react-bootstrap/form"; // Imports bootstrap Form Preset
 import "./styles/LoginPage.css"; // Import the styling for the jsx in this file
-
+import "bootstrap/dist/css/bootstrap.min.css";
 // Firebase
 import withFirebaseAuth, {
     WrappedComponentProps,
@@ -13,6 +13,7 @@ import firebase from "firebase/app";
 import firebaseConfig from "../firebaseConfig.json"; // Import Firebase config
 import "firebase/auth";
 
+import LoginForm from "./LoginForm";
 import logo from "../images/logo.png";
 
 const firebaseApp = firebase.initializeApp(firebaseConfig);
@@ -31,7 +32,7 @@ class LoginPage extends React.Component<WrappedComponentProps> {
         this.setState({ password: event.target.value });
     };
 
-    emailSignIn = (email: string, password: string) => {
+    signIn = (email: string, password: string) => {
         firebase
             .auth()
             .signInWithEmailAndPassword(email, password)
@@ -43,20 +44,28 @@ class LoginPage extends React.Component<WrappedComponentProps> {
             });
     };
 
-    emailSignOut = () => {
+    signUp = (email: string, password: string) => {
         firebase
             .auth()
-            .signOut()
-            .then(function () {
-                console.log("Signed Out");
-            })
+            .createUserWithEmailAndPassword(email, password)
             .catch(function (error) {
-                console.log(error);
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                // ...
             });
+        this.setState({
+            email: "",
+            password: "",
+        });
     };
 
     componentDidMount = () => {
-        firebase.auth().onAuthStateChanged(function (user) {
+        firebase.auth().onAuthStateChanged((user) => {
+            this.setState({
+                email: "",
+                password: "",
+            });
             if (user) {
                 // User is signed in.
                 var displayName = user.displayName;
@@ -94,7 +103,10 @@ class LoginPage extends React.Component<WrappedComponentProps> {
         } else {
             userDisplay = (
                 <>
-                    <Button variant="primary" onClick={signInWithGoogle}>
+                    <Button
+                        variant="outline-primary"
+                        onClick={signInWithGoogle}
+                    >
                         Sign in with Google
                     </Button>
                 </>
@@ -107,46 +119,16 @@ class LoginPage extends React.Component<WrappedComponentProps> {
                     src={logo}
                     alt="Team Chaos 2458 Logo"
                 />
-                <Form>
-                    <Form.Group controlId="formBasicEmail" /*xs={7}*/>
-                        <Form.Label>Email address</Form.Label>
-                        <Form.Control
-                            type="email"
-                            placeholder="Email"
-                            value={this.state.email}
-                            onChange={this.setEmail}
-                        />
-                        <Form.Text className="text-muted">
-                            We'll never share your email with anyone else.
-                        </Form.Text>
-                    </Form.Group>
-
-                    <Form.Group controlId="formBasicPassword">
-                        <Form.Label>Password</Form.Label>
-                        <Form.Control
-                            type="password"
-                            placeholder="Password"
-                            value={this.state.password}
-                            onChange={this.setPassword}
-                        />
-                    </Form.Group>
-                    <Form.Group controlId="formBasicCheckbox">
-                        <Button
-                            variant="primary"
-                            style={{ marginRight: "1rem" }}
-                            onClick={() =>
-                                this.emailSignIn(
-                                    this.state.email,
-                                    this.state.password
-                                )
-                            }
-                        >
-                            Log In
-                        </Button>
-                        <Button variant="secondary">Sign Up</Button>
-                    </Form.Group>
-                </Form>
-                <div>{userDisplay}</div>
+                <LoginForm
+                    email={this.state.email}
+                    setEmail={this.setEmail}
+                    password={this.state.password}
+                    setPassword={this.setPassword}
+                    signIn={this.signIn}
+                    signUp={this.signUp}
+                    signOut={signOut}
+                />
+                <div style={{ textAlign: "center" }}>{userDisplay}</div>
             </div>
         );
     }
