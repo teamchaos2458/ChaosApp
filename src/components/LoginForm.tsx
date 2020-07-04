@@ -87,6 +87,9 @@ export default function SignUpForm(props: any) {
                             value={props.email}
                             onChange={props.setEmail}
                         />
+                        <Form.Text className="text-danger">
+                            {props.signInError}
+                        </Form.Text>
                     </Form.Group>
 
                     <Form.Group controlId="formBasicPassword">

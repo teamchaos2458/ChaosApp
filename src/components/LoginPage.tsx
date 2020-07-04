@@ -1,27 +1,17 @@
-import React from "react"; // Import React
-
-// Styling
-import Button from "react-bootstrap/button"; // Imports bootstrap Button preset
-import Form from "react-bootstrap/form"; // Imports bootstrap Form Preset
-import "./styles/LoginPage.css"; // Import the styling for the jsx in this file
+import React from "react";
+import Button from "react-bootstrap/button";
+import "./styles/LoginPage.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-// Firebase
-import withFirebaseAuth, {
-    WrappedComponentProps,
-} from "react-with-firebase-auth"; // Import Firebase Witchcraft
-import firebase from "firebase/app";
-import firebaseConfig from "../firebaseConfig.json"; // Import Firebase config
-import "firebase/auth";
-
+import { auth, googleAuthProvider } from "../firebase/firebaseConfig";
 import LoginForm from "./LoginForm";
 import logo from "../images/logo.png";
+import { CardBody } from "react-bootstrap/Card";
 
-const firebaseApp = firebase.initializeApp(firebaseConfig);
-
-class LoginPage extends React.Component<WrappedComponentProps> {
+class LoginPage extends React.Component {
     state = {
         email: "",
         password: "",
+        signInError: "",
     };
 
     setEmail = (event: React.ChangeEvent<any>) => {
@@ -33,27 +23,23 @@ class LoginPage extends React.Component<WrappedComponentProps> {
     };
 
     signIn = (email: string, password: string) => {
-        firebase
-            .auth()
-            .signInWithEmailAndPassword(email, password)
-            .catch(function (error) {
-                // Handle Errors here.
-                var errorCode = error.code;
-                var errorMessage = error.message;
-                // ...
-            });
+        auth.signInWithEmailAndPassword(email, password).catch((error) => {
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            this.setState({ signInError: errorMessage });
+            // ...
+        });
     };
 
     signUp = (email: string, password: string) => {
-        firebase
-            .auth()
-            .createUserWithEmailAndPassword(email, password)
-            .catch(function (error) {
-                // Handle Errors here.
-                var errorCode = error.code;
-                var errorMessage = error.message;
-                // ...
-            });
+        auth.createUserWithEmailAndPassword(email, password).catch(function (
+            error
+        ) {
+            // Handle Errors here.
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            // ...
+        });
         this.setState({
             email: "",
             password: "",
@@ -61,10 +47,11 @@ class LoginPage extends React.Component<WrappedComponentProps> {
     };
 
     componentDidMount = () => {
-        firebase.auth().onAuthStateChanged((user) => {
+        auth.onAuthStateChanged((user) => {
             this.setState({
                 email: "",
                 password: "",
+                signInError: "",
             });
             if (user) {
                 // User is signed in.
@@ -86,26 +73,36 @@ class LoginPage extends React.Component<WrappedComponentProps> {
     };
 
     render() {
-        const { user, signOut, signInWithGoogle } = this.props; // witchcraft
         //console.log(user);
         let userDisplay;
-        if (user) {
+        if (auth.currentUser) {
             userDisplay = (
                 <>
-                    <Button variant="danger" onClick={signOut}>
+                    <div style={{ height: "5rem" }} />
+                    <Button variant="danger" onClick={() => auth.signOut()}>
                         Sign out
                     </Button>
                     <p style={{ marginTop: "1rem" }}>
-                        Signed in with {user.email}
+                        Signed in with {auth.currentUser.email}
                     </p>
                 </>
             );
         } else {
             userDisplay = (
                 <>
+                    <LoginForm
+                        email={this.state.email}
+                        setEmail={this.setEmail}
+                        password={this.state.password}
+                        setPassword={this.setPassword}
+                        signIn={this.signIn}
+                        signUp={this.signUp}
+                        signOut={auth.signOut}
+                        signInError={this.state.signInError}
+                    />
                     <Button
                         variant="outline-primary"
-                        onClick={signInWithGoogle}
+                        onClick={() => auth.signInWithPopup(googleAuthProvider)}
                     >
                         Sign in with Google
                     </Button>
@@ -119,30 +116,11 @@ class LoginPage extends React.Component<WrappedComponentProps> {
                     src={logo}
                     alt="Team Chaos 2458 Logo"
                 />
-                <LoginForm
-                    email={this.state.email}
-                    setEmail={this.setEmail}
-                    password={this.state.password}
-                    setPassword={this.setPassword}
-                    signIn={this.signIn}
-                    signUp={this.signUp}
-                    signOut={signOut}
-                />
+
                 <div style={{ textAlign: "center" }}>{userDisplay}</div>
             </div>
         );
     }
 }
 
-const firebaseAppAuth = firebaseApp.auth(); // constantly authorizing or smth  idk
-
-const providers = {
-    // provides for its family
-    googleProvider: new firebase.auth.GoogleAuthProvider(), // google be rich
-};
-
-export default withFirebaseAuth({
-    // get out of my country
-    providers,
-    firebaseAppAuth, // what more can I say
-})(LoginPage); // cant decide what it is
+export default LoginPage; // cant decide what it is
